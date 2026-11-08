@@ -1,0 +1,42 @@
+[
+  {
+    "upstream_repo": "https://github.com/dongrixinyu/JioNLP",
+    "head_sha": "692c51d0438c402f8aa252030cc4f4e092efcb43",
+    "file": "jionlp/gadget/time_parser.py",
+    "function": "TimeParser.parse_time_point",
+    "native_test_cmd": "TZ=Asia/Shanghai python3 -m pytest test/test_time_parser.py test/test_location_parser.py test/test_money_parser.py test/test_time_extractor.py -q --tb=short",
+    "bench_cmd": "TZ=Asia/Shanghai taskset -c 0 python3 osspr-intake/harness/bench.py parse_time_point",
+    "baseline_median_ms": 54.092,
+    "baseline_noise_pct": 1.17,
+    "tests_pass_on_baseline": true,
+    "labeled_data": null,
+    "notes": "One pass over the 416 strings in the first time_string_list of test/test_time_parser.py, each parsed with that case's time_base. Those calls enter parse_time_point 472 times. The method runs all 58 date patterns and all 10 clock patterns, then keeps the longest pair and breaks once the two pieces concatenate to the whole string. A later pair replaces the current one only when it is strictly longer, so a pair that already covers the whole string is final. Searching the 10 clock patterns first and stopping the date scan at that cover selected the same strings and the same normalizer functions on all 472 calls. That search dropped from about 27 ms to about 16 ms inside this 54 ms parse. Measured on CPython 3.12.3, one core, nine samples after two warmups; baseline_noise_pct is (max-min)/median."
+  },
+  {
+    "upstream_repo": "https://github.com/dongrixinyu/JioNLP",
+    "head_sha": "692c51d0438c402f8aa252030cc4f4e092efcb43",
+    "file": "jionlp/gadget/location_recognizer.py",
+    "function": "LocationRecognizer.get_china_candidates",
+    "native_test_cmd": "TZ=Asia/Shanghai python3 -m pytest test/test_time_parser.py test/test_location_parser.py test/test_money_parser.py test/test_time_extractor.py -q --tb=short",
+    "bench_cmd": "TZ=Asia/Shanghai taskset -c 0 python3 osspr-intake/harness/bench.py get_china_candidates",
+    "baseline_median_ms": 313.669,
+    "baseline_noise_pct": 1.81,
+    "tests_pass_on_baseline": true,
+    "labeled_data": null,
+    "notes": "400 exact place names from the loaded China map (3,427 rows), chosen with random.Random(0).sample on the sorted exact-match strings. Each call walks every row and compares the token to the province, city, and county fields. This is a different function from LocationParser.get_candidates: the recognizer matches the whole token, and the merged location-parser work does not change this loop. A map from each exact string to the row indexes that contain it, walked in the original row order with the same per-row match and the same dedup, returned the same candidate list for all 6,113 exact names. A 200-name scan of that loop took about 157 ms; the indexed walk of the same names took under 1 ms. Measured on CPython 3.12.3, one core, nine samples after two warmups; baseline_noise_pct is (max-min)/median."
+  },
+  {
+    "upstream_repo": "https://github.com/dongrixinyu/JioNLP",
+    "head_sha": "692c51d0438c402f8aa252030cc4f4e092efcb43",
+    "file": "jionlp/gadget/phone_location.py",
+    "function": "PhoneLocation._prepare",
+    "native_test_cmd": "TZ=Asia/Shanghai python3 -m pytest test/test_time_parser.py test/test_location_parser.py test/test_money_parser.py test/test_time_extractor.py -q --tb=short",
+    "metric_kind": "peak_memory_bytes",
+    "baseline_value": 134857498,
+    "baseline_noise_pct": 0.00027,
+    "metric_benchmark": "TZ=Asia/Shanghai taskset -c 0 python3 osspr-intake/harness/bench.py phone_prepare_peak",
+    "labeled_data": null,
+    "tests_pass_on_baseline": true,
+    "notes": "tracemalloc peak while PhoneLocation._prepare loads phone_location.txt. The loader turns every numeric range into its own 7-digit key (454,970 keys from 51,124 ranges and 66,215 single numbers) and _prepare inserts each key into a digit trie (505,949 nodes). cell_phone_location then searches exactly those seven digits. Keeping each range intact and resolving the last four digits with a binary search on the three-digit prefix returned the same location string for every one of the 454,970 keys. Building that table peaked near 12 MB. The nine peak samples drift down by a few dozen bytes each run; baseline_noise_pct is the full (max-min)/median of those peaks. Measured on CPython 3.12.3."
+  }
+]

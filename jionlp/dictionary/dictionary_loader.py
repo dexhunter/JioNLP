@@ -13,7 +13,7 @@ import json
 import math
 
 from jionlp import logging
-from jionlp.util.file_io import read_file_by_line
+from jionlp.util.file_io import read_file_by_line, read_file_by_iter
 
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -246,6 +246,11 @@ def negative_words_loader():
     return res
 
 
+def _pinyin_pattern():
+    """ 汉字字典释义中 [拼音] 读音标记的正则。"""
+    return re.compile(r'\[[a-zàáāǎòóōǒèéēěìíīǐùúūǔǜǘǖǚǹńňüḿ]{1,8}\]')
+
+
 def chinese_char_dictionary_loader():
     """ 加载百度汉语字典，字典与新华字典大同小异，分别包括：
     汉字，偏旁，字形结构，四角编码，笔画顺序，繁体字，五笔输入编码，拼音，释义
@@ -268,7 +273,7 @@ def chinese_char_dictionary_loader():
                      'chinese_char_dictionary.txt'),
         strip=False, auto_loads_json=False)
 
-    pinyin_ptn = re.compile(r'\[[a-zàáāǎòóōǒèéēěìíīǐùúūǔǜǘǖǚǹńňüḿ]{1,8}\]')
+    pinyin_ptn = _pinyin_pattern()
     explanation_ptn = re.compile(r'\d{1,2}\.')
 
     char_dict = {}
@@ -463,11 +468,21 @@ def pinyin_phrase_loader():
 def pinyin_char_loader():
     """加载拼音词典 chinese_char_dictionary.txt，以 list 返回，多音字也标出。"""
 
-    char_dict = chinese_char_dictionary_loader()
+    pinyin_ptn = _pinyin_pattern()
+    pinyin_pool = {}  # 同一读音的字符串只保留一份
     pinyin_char_dict = dict()
-    for char, item in char_dict.items():
-        pinyin_list = list(item['pinyin'].keys())
-        pinyin_char_dict.update({char: pinyin_list})
+    for line in read_file_by_iter(
+            os.path.join(GRAND_DIR_PATH, 'dictionary',
+                         'chinese_char_dictionary.txt'),
+            strip=False, auto_loads_json=False):
+        char = line[:line.index('\t')]
+        gloss = line[line.rindex('\t') + 1:]
+        readings = {}
+        for item in pinyin_ptn.findall(gloss):
+            pinyin = item[1:-1]
+            readings[pinyin_pool.setdefault(pinyin, pinyin)] = None
+        # list(dict) 按键数精确分配，避免逐个追加造成的列表冗余容量
+        pinyin_char_dict[char] = list(readings)
 
     return pinyin_char_dict
 

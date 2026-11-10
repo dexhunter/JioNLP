@@ -1,0 +1,62 @@
+[
+  {
+    "upstream_repo": "https://github.com/dongrixinyu/JioNLP",
+    "head_sha": "692c51d0438c402f8aa252030cc4f4e092efcb43",
+    "file": "jionlp/dictionary/dictionary_loader.py",
+    "function": "word_distribution_loader",
+    "native_test_cmd": "TZ=Asia/Shanghai python3 -m pytest test/test_time_parser.py test/test_location_parser.py test/test_money_parser.py test/test_time_extractor.py test/test_idiom_solitaire.py test/test_money_extractor.py test/test_remove_url.py test/test_remove_email.py test/test_remove_phone_number.py test/test_text_aug.py -q --tb=line",
+    "tests_pass_on_baseline": true,
+    "metric_kind": "peak_memory_bytes",
+    "baseline_value": 90193189,
+    "baseline_noise_pct": 0.0,
+    "metric_benchmark": "TZ=Asia/Shanghai taskset -c 0 python3 osspr-intake/harness/measure.py word_distribution_peak",
+    "labeled_data": null,
+    "why_hot": "read_file_by_line keeps all 196,936 JSON pairs alive while the loader builds a second dict of total_num, prob, and log_prob. With gc disabled, tracemalloc peak is 90,193,189 bytes and the live dict is 71,243,109 bytes, so 18,950,080 bytes are those source rows at the high-water mark. Loading each line, keeping only the count, then writing the same three fields returns a dict that compares equal to word_distribution_loader(), floats included, on every entry. Nine warmed samples were identical, so the spread is 0. The harness sha256 of the sorted records is 896f90decf76a3a650bf91a5cf0ddfaf98f825761b509fb31807c82ed1f024e8.",
+    "overlap_check": "Open upstream PRs on 2026-11-10: #322 touches TimeParser.parse_time_point; #323 touches LocationRecognizer._mapping_china_location and LocationRecognizer.get_china_candidates; #324 touches PhoneLocation._prepare, PhoneLocation.__call__, and PhoneLocation.landline_phone_location; #325 touches TimeParser.normalize_limit_year_blur_month; #326 touches TimeParser._compensate_string. None of those diffs edit dictionary_loader.py. word_distribution_loader is not among them. The 2026-11-08 intake cards are TimeParser.parse_time_point, LocationRecognizer.get_china_candidates, and PhoneLocation._prepare for peak_memory_bytes; this function has no card."
+  },
+  {
+    "upstream_repo": "https://github.com/dongrixinyu/JioNLP",
+    "head_sha": "692c51d0438c402f8aa252030cc4f4e092efcb43",
+    "file": "jionlp/dictionary/dictionary_loader.py",
+    "function": "idf_loader",
+    "native_test_cmd": "TZ=Asia/Shanghai python3 -m pytest test/test_time_parser.py test/test_location_parser.py test/test_money_parser.py test/test_time_extractor.py test/test_idiom_solitaire.py test/test_money_extractor.py test/test_remove_url.py test/test_remove_email.py test/test_remove_phone_number.py test/test_text_aug.py -q --tb=line",
+    "tests_pass_on_baseline": true,
+    "metric_kind": "peak_memory_bytes",
+    "baseline_value": 55527501,
+    "baseline_noise_pct": 0.0,
+    "metric_benchmark": "TZ=Asia/Shanghai taskset -c 0 python3 osspr-intake/harness/measure.py idf_peak",
+    "labeled_data": null,
+    "why_hot": "idf_loader keeps all 270,132 raw 'word\\tidf' lines while it builds a second dict of split keys and floats. Peak is 55,527,501 bytes and the returned dict is 31,307,531 bytes, so 24,219,970 bytes are the source lines. Streaming each line into word -> float(idf) and dropping the line returns a dict equal to idf_loader() on all 270,132 entries. Nine warmed peak samples were identical. The harness sha256 of the sorted items is 41a4e40caa1c30c34f69476ee4112dcc5dcee1be99fb5d8f3a571dab7f49db56.",
+    "overlap_check": "Open upstream PRs on 2026-11-10: #322 touches TimeParser.parse_time_point; #323 touches LocationRecognizer._mapping_china_location and LocationRecognizer.get_china_candidates; #324 touches PhoneLocation._prepare, PhoneLocation.__call__, and PhoneLocation.landline_phone_location; #325 touches TimeParser.normalize_limit_year_blur_month; #326 touches TimeParser._compensate_string. None of those diffs edit dictionary_loader.py. idf_loader is not among them. The 2026-11-08 intake cards are TimeParser.parse_time_point, LocationRecognizer.get_china_candidates, and PhoneLocation._prepare for peak_memory_bytes; this function has no card."
+  },
+  {
+    "upstream_repo": "https://github.com/dongrixinyu/JioNLP",
+    "head_sha": "692c51d0438c402f8aa252030cc4f4e092efcb43",
+    "file": "jionlp/dictionary/dictionary_loader.py",
+    "function": "pinyin_char_loader",
+    "native_test_cmd": "TZ=Asia/Shanghai python3 -m pytest test/test_time_parser.py test/test_location_parser.py test/test_money_parser.py test/test_time_extractor.py test/test_idiom_solitaire.py test/test_money_extractor.py test/test_remove_url.py test/test_remove_email.py test/test_remove_phone_number.py test/test_text_aug.py -q --tb=line",
+    "tests_pass_on_baseline": true,
+    "metric_kind": "peak_memory_bytes",
+    "baseline_value": 24086775,
+    "baseline_noise_pct": 0.0,
+    "metric_benchmark": "TZ=Asia/Shanghai taskset -c 0 python3 osspr-intake/harness/measure.py pinyin_char_peak",
+    "labeled_data": null,
+    "why_hot": "pinyin_char_loader calls chinese_char_dictionary_loader(), which regex-splits every gloss into per-reading explanation lists, then keeps only the pinyin keys for 17,578 characters. Warmed peak is 24,086,775 bytes and the returned map is 4,060,157 bytes, so 20,026,618 bytes are the full character dictionary this function discards. Reading only the bracketed pinyin tokens, in file order, returns the same 17,578 lists; no character repeats a reading. Nine warmed peak samples were identical. The harness sha256 is 70b360f9d83e6a3d115fdfed57bce3a88c0032120954ddc8237cdb7cd27513dc.",
+    "overlap_check": "Open upstream PRs on 2026-11-10: #322 touches TimeParser.parse_time_point; #323 touches LocationRecognizer._mapping_china_location and LocationRecognizer.get_china_candidates; #324 touches PhoneLocation._prepare, PhoneLocation.__call__, and PhoneLocation.landline_phone_location; #325 touches TimeParser.normalize_limit_year_blur_month; #326 touches TimeParser._compensate_string. None of those diffs edit dictionary_loader.py or pinyin.py. pinyin_char_loader is not among them. The 2026-11-08 intake cards are TimeParser.parse_time_point, LocationRecognizer.get_china_candidates, and PhoneLocation._prepare for peak_memory_bytes; this function has no card."
+  },
+  {
+    "upstream_repo": "https://github.com/dongrixinyu/JioNLP",
+    "head_sha": "692c51d0438c402f8aa252030cc4f4e092efcb43",
+    "file": "jionlp/algorithm/summary/extract_summary.py",
+    "function": "ChineseSummaryExtractor._lda_prob_matrix",
+    "native_test_cmd": "TZ=Asia/Shanghai python3 -m pytest test/test_time_parser.py test/test_location_parser.py test/test_money_parser.py test/test_time_extractor.py test/test_idiom_solitaire.py test/test_money_extractor.py test/test_remove_url.py test/test_remove_email.py test/test_remove_phone_number.py test/test_text_aug.py -q --tb=line",
+    "tests_pass_on_baseline": true,
+    "metric_kind": "allocations",
+    "baseline_value": 26150811,
+    "baseline_noise_pct": 0.0,
+    "metric_benchmark": "TZ=Asia/Shanghai taskset -c 0 python3 osspr-intake/harness/measure.py summary_lda_allocs",
+    "labeled_data": null,
+    "why_hot": "After loading topic_word_weight.json (96,365 words, 100 topics), _topic_prominence calls str(i) inside the word loop, 9,636,500 times, and also builds a 100-element list plus a one-entry dict.update per word. With the object allocator hooked and gc disabled, the call does 26,150,811 allocations, identical across nine warmed samples. Caching those 100 index strings and assigning into the prominence dict yields the same normalized float for every word and the same unk_topic_prominence_value 0.40641102470984913. Summary text depends on those floats. The harness sha256 of the prominence table is 4a7bc47bf24e23378add7cf6c8f958b41c74d83a0539eb529396677766bc1d56. ChineseKeyPhrasesExtractor._lda_prob_matrix is the same loop and is not given a second card.",
+    "overlap_check": "Open upstream PRs on 2026-11-10: #322 touches TimeParser.parse_time_point; #323 touches LocationRecognizer._mapping_china_location and LocationRecognizer.get_china_candidates; #324 touches PhoneLocation._prepare, PhoneLocation.__call__, and PhoneLocation.landline_phone_location; #325 touches TimeParser.normalize_limit_year_blur_month; #326 touches TimeParser._compensate_string. None of those diffs edit extract_summary.py. ChineseSummaryExtractor._lda_prob_matrix is not among them. The 2026-11-08 intake cards are TimeParser.parse_time_point, LocationRecognizer.get_china_candidates, and PhoneLocation._prepare for peak_memory_bytes; this function has no card."
+  }
+]
